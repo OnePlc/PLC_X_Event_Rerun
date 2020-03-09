@@ -23,8 +23,7 @@ use Laminas\Db\Adapter\AdapterInterface;
 use Laminas\EventManager\EventInterface as Event;
 use Laminas\ModuleManager\ModuleManager;
 use OnePlace\Event\Model\EventTable;
-use OnePlace\Event\Ticket\Controller\TicketController;
-use OnePlace\Event\Ticket\Model\TicketTable;
+use OnePlace\Event\Rerun\Controller\RerunController;
 
 class Module {
     /**
@@ -32,7 +31,7 @@ class Module {
      *
      * @since 1.0.0
      */
-    const VERSION = '1.0.0';
+    const VERSION = '1.0.1';
 
     /**
      * Load module config file
@@ -53,8 +52,8 @@ class Module {
         $tableGateway = $container->get(EventTable::class);
 
         # Register Filter Plugin Hook
-        CoreEntityController::addHook('event-view-before',(object)['sFunction'=>'attachRerunForm','oItem'=>new TicketController($oDbAdapter,$tableGateway,$container)]);
-        CoreEntityController::addHook('eventrerun-add-before-save',(object)['sFunction'=>'attachRerunToEvent','oItem'=>new TicketController($oDbAdapter,$tableGateway,$container)]);
+        CoreEntityController::addHook('event-view-before',(object)['sFunction'=>'attachRerunForm','oItem'=>new RerunController($oDbAdapter,$tableGateway,$container)]);
+        CoreEntityController::addHook('eventrerun-add-before-save',(object)['sFunction'=>'attachRerunToEvent','oItem'=>new RerunController($oDbAdapter,$tableGateway,$container)]);
     }
 
     /**

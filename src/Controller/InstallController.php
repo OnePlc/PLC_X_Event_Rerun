@@ -19,12 +19,11 @@ namespace OnePlace\Event\Rerun\Controller;
 
 use Application\Controller\CoreUpdateController;
 use Application\Model\CoreEntityModel;
-use OnePlace\Contact\History\Model\HistoryTable;
 use Laminas\View\Model\ViewModel;
 use Laminas\Db\Adapter\AdapterInterface;
 use Laminas\Db\TableGateway\TableGateway;
 use Laminas\Db\ResultSet\ResultSet;
-use OnePlace\Event\Ticket\Model\TicketTable;
+use OnePlace\Event\Model\EventTable;
 
 class InstallController extends CoreUpdateController {
     /**
@@ -34,7 +33,7 @@ class InstallController extends CoreUpdateController {
      * @param HistoryTable $oTableGateway
      * @since 1.0.0
      */
-    public function __construct(AdapterInterface $oDbAdapter, TicketTable $oTableGateway, $oServiceManager)
+    public function __construct(AdapterInterface $oDbAdapter, EventTable $oTableGateway, $oServiceManager)
     {
         $this->oTableGateway = $oTableGateway;
         $this->sSingleForm = 'event-single';
@@ -55,13 +54,21 @@ class InstallController extends CoreUpdateController {
 
         $oRequest = $this->getRequest();
 
+        $oModTbl = new TableGateway('core_module', CoreUpdateController::$oDbAdapter);
+
+
         if(! $oRequest->isPost()) {
 
             $bTableExists = false;
 
             try {
-                $this->oTableGateway->fetchAll(false);
-                $bTableExists = true;
+                $oModInstalled = $oModTbl->select([
+                    'module_key' => 'oneplace-event-rerun',
+                    'type' => 'plugin',
+                ]);
+                if(count($oModInstalled) > 0) {
+                    $bTableExists = true;
+                }
             } catch (\RuntimeException $e) {
 
             }
@@ -93,7 +100,6 @@ class InstallController extends CoreUpdateController {
                 }
             }
 
-            $oModTbl = new TableGateway('core_module', CoreUpdateController::$oDbAdapter);
             $oModTbl->insert([
                 'module_key' => 'oneplace-event-rerun',
                 'type' => 'plugin',

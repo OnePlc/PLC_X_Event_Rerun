@@ -19,8 +19,6 @@ namespace OnePlace\Event\Rerun\Controller;
 
 use Application\Controller\CoreEntityController;
 use Application\Model\CoreEntityModel;
-use OnePlace\Article\Model\ArticleTable;
-use OnePlace\Article\Variant\Model\VariantTable;
 use OnePlace\Event\Model\EventTable;
 use Laminas\View\Model\ViewModel;
 use Laminas\Db\Adapter\AdapterInterface;
@@ -40,7 +38,7 @@ class RerunController extends CoreEntityController {
      * @param EventTable $oTableGateway
      * @since 1.0.0
      */
-    public function __construct(AdapterInterface $oDbAdapter,TicketTable $oTableGateway,$oServiceManager) {
+    public function __construct(AdapterInterface $oDbAdapter,EventTable $oTableGateway,$oServiceManager) {
         $this->oTableGateway = $oTableGateway;
         $this->sSingleForm = 'eventrerun-single';
         parent::__construct($oDbAdapter,$oTableGateway,$oServiceManager);
@@ -72,13 +70,26 @@ class RerunController extends CoreEntityController {
 
         $aFieldsByTab = ['rerun-base'=>$aFields];
 
+        $aReruns = [];
+        $oPrimaryTicket = false;
+        if($oItem) {
+            # load contact addresses
+            $oRerunsDB = $this->oTableGateway->fetchAll(false, ['root_event_idfs' => $oItem->getID()]);
+            # get primary address
+            if (count($oRerunsDB) > 0) {
+                foreach ($oRerunsDB as $oEv) {
+                    $aReruns[] = $oEv;
+                }
+            }
+        }
+
         # Pass Data to View - which will pass it to our partial
         return [
             # must be named aPartialExtraData
             'aPartialExtraData' => [
                 # must be name of your partial
                 'event_rerun'=> [
-                    'oReruns'=>[],
+                    'oReruns'=>$aReruns,
                     'oForm'=>$oForm,
                     'aFormFields'=>$aFieldsByTab,
                 ]
@@ -88,7 +99,12 @@ class RerunController extends CoreEntityController {
 
     public function attachRerunToEvent($oItem,$aRawData)
     {
-        //$oItem->event_idfs = $aRawData['ref_idfs'];
+        $oRootEvent = $this->oTableGateway->getSingle($aRawData['ref_idfs']);
+        $oItem->label = 'Event Rerun';
+        $oItem->date_start = date('Y-m-d H:i',strtotime($aRawData[$this->sSingleForm.'_date_start'].' '.$aRawData[$this->sSingleForm.'_date_start-time']));
+        $oItem->date_end = date('Y-m-d H:i',strtotime($aRawData[$this->sSingleForm.'_date_end'].' '.$aRawData[$this->sSingleForm.'_date_end-time']));
+        $oItem->root_event_idfs = $aRawData['ref_idfs'];
+        $oItem->calendar_idfs = $oRootEvent->calendar_idfs;
 
         return $oItem;
     }
@@ -106,6 +122,6 @@ class RerunController extends CoreEntityController {
          */
         $iEventID = $this->params()->fromRoute('id', 0);
 
-        return $this->generateAddView('eventticket','eventticket-single','event','view',$iEventID,['iEventID'=>$iEventID]);
+        return $this->generateAddView('eventrerun','eventrerun-single','event','view',$iEventID,['iEventID'=>$iEventID]);
     }
 }

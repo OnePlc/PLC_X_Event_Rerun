@@ -1,0 +1,29 @@
+<?php
+# Only show partial if data is set
+if(array_key_exists('event_rerun',$this->aPartialData)) {
+    # add address form fields
+    $oReruns = $this->aPartialData['event_rerun']['oReruns'];
+    $aFields = $this->aPartialData['event_rerun']['aFormFields'];
+    if(count($oReruns) == 0) { ?>
+        <div class="alert alert-info px-2 py-2">
+            <?=$this->translate('No Reruns yet')?>
+        </div>
+    <?php } else { ?>
+        <ul class="list-group">
+        <?php
+        foreach($oReruns as $oTk) {
+            ?>
+            <li class="list-group-item">
+                <div class="row">
+                    <?= $this->partial('partial/viewformfields', ['sFormName' => 'eventrerun-single', 'sTab' => 'rerun-base', 'oItem' => $oTk, 'aFormFieldsByTab' => $aFields]); ?>
+                </div>
+            </li>
+        <?php
+        }
+        ?>
+        </ul>
+    <?php
+    }
+} else {
+    echo 'no partial data';
+}
